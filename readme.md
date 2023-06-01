@@ -2,10 +2,10 @@ To run project, follow these steps:
 1. In backend/settings.py at line number 80 enter your postgres details and add your postgres password in .env file.
 
 2. Open the terminal in Visual Studio Code (VSCode) and navigate to the "store-monitoring" directory:
-   pip install django
-   python manage.py makemigrations
-   python manage.py migrate
-   python manage.py runserver
+   . pip install django
+   . python manage.py makemigrations
+   . python manage.py migrate
+   . python manage.py runserver
 
 3. Navigate to these urls to insert data from csv files to database:
   http://127.0.0.1:8000/insert_store_status/
