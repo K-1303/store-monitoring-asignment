@@ -118,7 +118,7 @@ def generate_report():
         'downtime_last_week': [],
     }
 
-    stores = StoreBusinessHours.objects.all()[:10]  # Limiting to 100 stores
+    stores = StoreBusinessHours.objects.all()[:100]  
     for store in stores:
         store_id = store.store_id
         timezone_obj = StoreTimezone.objects.filter(store_id=store_id).first()
@@ -130,7 +130,6 @@ def generate_report():
             start_time_local = datetime.min.time()
             end_time_local = datetime.max.time()
         else:
-            # Get the start and end time of the store's business hours in local time
             business_hours = business_hours.first()
             start_time_local = business_hours.start_time_local
             end_time_local = business_hours.end_time_local
@@ -161,7 +160,6 @@ def generate_report():
             timestamp_utc__lte=current_time_utc
         )
 
-        # Calculate the uptime and downtime for each time interval
         uptime_last_hour = calculate_uptime(activity_last_hour, start_time_last_hour, current_time_local, start_time_local, end_time_local)
         uptime_last_day = calculate_uptime(activity_last_day, start_time_last_day, current_time_local, start_time_local, end_time_local)
         uptime_last_week = calculate_uptime(activity_last_week, start_time_last_week, current_time_local, start_time_local, end_time_local)
@@ -170,7 +168,6 @@ def generate_report():
         downtime_last_day = (current_time_local - start_time_last_day).total_seconds() / 3600 - uptime_last_day
         downtime_last_week = (current_time_local - start_time_last_week).total_seconds() / 3600 - uptime_last_week
 
-        # Update the report data
         report_data['store_id'].append(store_id)
         report_data['uptime_last_hour'].append(uptime_last_hour)
         report_data['uptime_last_day'].append(uptime_last_day)
@@ -179,28 +176,23 @@ def generate_report():
         report_data['downtime_last_day'].append(downtime_last_day)
         report_data['downtime_last_week'].append(downtime_last_week)
 
-    # Save the report data to the database
     report = Report.objects.create(**report_data)
     return [report]
 
 
 
 def trigger_report(request):
-    # Generate the reports
     reports = generate_report()
 
-    # Generate the CSV data
     csv_data = generate_csv(reports)
 
-    # Create the response
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="report.csv"'
     writer = csv.writer(response)
     writer.writerow(['store_id', 'uptime_last_hour', 'uptime_last_day', 'uptime_last_week',
                      'downtime_last_hour', 'downtime_last_day', 'downtime_last_week'])
-    writer.writerow(csv_data)  # Write the CSV data as a single row
+    writer.writerow(csv_data)  
 
-    # Return a single report ID as a response
     return JsonResponse({"report_id": reports[0].id})
 
 
@@ -226,16 +218,13 @@ def get_report(request, report_id):
 
     report = Report.objects.get(id=report_id)
 
-    # Convert the single report into a list containing only one report
     reports = [report]
 
     csv_data = generate_csv(reports)
 
-    # Extract the values from the csv_data
     values = csv_data[0]
     column_headers = ['store_id', 'uptime_last_hour', 'uptime_last_day', 'uptime_last_week', 'downtime_last_hour', 'downtime_last_day', 'downtime_last_week']
 
-    # Create key-value pairs from the values
     key_value_pairs = [(column, value) for column, value in zip(column_headers, values)]
 
     response = HttpResponse(content_type='text/csv')
