@@ -33,3 +33,4 @@ class Report(models.Model):
     downtime_last_hour = ArrayField(models.IntegerField())
     downtime_last_day = ArrayField(models.FloatField())
     downtime_last_week = ArrayField(models.FloatField())
+    

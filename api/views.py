@@ -9,6 +9,7 @@ from datetime import timedelta
 from pytz import timezone
 
 report_list = []
+is_complete = True
 
 def insert_store_status(request):
     data = os.path.join(os.path.dirname(
@@ -106,6 +107,8 @@ def calculate_uptime(activity_data, start_time_interval, end_time_interval, star
 from django.contrib.postgres.aggregates import ArrayAgg
 
 def generate_report():
+    global is_complete
+    is_complete = False
     current_time_utc = datetime.now(timezone('UTC'))
 
     report_data = {
@@ -176,9 +179,9 @@ def generate_report():
         report_data['downtime_last_day'].append(downtime_last_day)
         report_data['downtime_last_week'].append(downtime_last_week)
 
+    is_complete = True
     report = Report.objects.create(**report_data)
     return [report]
-
 
 
 def trigger_report(request):
@@ -217,6 +220,9 @@ def get_report(request, report_id):
         return JsonResponse({"message": "Report not found"})
 
     report = Report.objects.get(id=report_id)
+
+    if is_complete==False:
+        return JsonResponse({"status": "Running"})
 
     reports = [report]
 
